@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Work Timer</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Barlow:wght@300;400;600;700;900&display=swap');
+
+  :root {
+    --bg: #0e0f11;
+    --panel: #16181c;
+    --border: #2a2d35;
+    --accent: #f5c518;
+    --accent2: #e07b39;
+    --text: #d4d6dc;
+    --muted: #555a68;
+    --green: #3ddc84;
+    --red: #ff4f4f;
+    --mono: 'Share Tech Mono', monospace;
+    --sans: 'Barlow', sans-serif;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 40px 20px;
+    background-image:
+      repeating-linear-gradient(0deg, transparent, transparent 39px, #1a1c21 39px, #1a1c21 40px),
+      repeating-linear-gradient(90deg, transparent, transparent 39px, #1a1c21 39px, #1a1c21 40px);
+    background-size: 40px 40px;
+  }
+
+  .container {
+    width: 100%;
+    max-width: 560px;
+  }
+
+  header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 32px;
+    border-bottom: 2px solid var(--accent);
+    padding-bottom: 12px;
+  }
+
+  .logo {
+    font-family: var(--sans);
+    font-weight: 900;
+    font-size: 28px;
+    letter-spacing: -0.5px;
+    color: #fff;
+    text-transform: uppercase;
+  }
+
+  .logo span { color: var(--accent); }
+
+  .date-display {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--muted);
+    text-align: right;
+    line-height: 1.6;
+  }
+
+  /* Main clock panel */
+  .clock-panel {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-top: 3px solid var(--accent);
+    padding: 32px;
+    margin-bottom: 16px;
+    position: relative;
+  }
+
+  .status-indicator {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  .status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--muted);
+    transition: background 0.3s;
+  }
+
+  .status-dot.active {
+    background: var(--green);
+    box-shadow: 0 0 8px var(--green);
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+
+  .label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+
+  .elapsed-display {
+    font-family: var(--mono);
+    font-size: 64px;
+    font-weight: 400;
+    letter-spacing: 2px;
+    color: #fff;
+    line-height: 1;
+    margin-bottom: 4px;
+    transition: color 0.3s;
+  }
+
+  .elapsed-display.running { color: var(--accent); }
+
+  .elapsed-sub {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--muted);
+    margin-bottom: 28px;
+  }
+
+  /* Check-in / Check-out buttons */
+  .btn-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  .btn {
+    font-family: var(--sans);
+    font-weight: 700;
+    font-size: 14px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    padding: 16px;
+    border: 2px solid;
+    cursor: pointer;
+    transition: all 0.15s;
+    position: relative;
+    overflow: hidden;
+    background: transparent;
+  }
+
+  .btn::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: currentColor;
+    opacity: 0;
+    transition: opacity 0.15s;
+  }
+
+  .btn:hover::after { opacity: 0.08; }
+  .btn:active { transform: scale(0.98); }
+
+  .btn-in {
+    border-color: var(--green);
+    color: var(--green);
+  }
+
+  .btn-in:disabled {
+    border-color: var(--border);
+    color: var(--muted);
+    cursor: not-allowed;
+  }
+
+  .btn-out {
+    border-color: var(--red);
+    color: var(--red);
+  }
+
+  .btn-out:disabled {
+    border-color: var(--border);
+    color: var(--muted);
+    cursor: not-allowed;
+  }
+
+  /* Today's sessions */
+  .sessions-panel {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    padding: 24px 32px;
+    margin-bottom: 16px;
+  }
+
+  .panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+  }
+
+  .panel-title {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .total-badge {
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--accent);
+    background: rgba(245, 197, 24, 0.1);
+    border: 1px solid rgba(245, 197, 24, 0.3);
+    padding: 3px 10px;
+  }
+
+  .sessions-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .session-row {
+    display: grid;
+    grid-template-columns: 28px 1fr 1fr 80px 32px;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+    animation: fadeIn 0.3s ease;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-4px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .session-num {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  .session-time {
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--text);
+  }
+
+  .session-time.out { color: var(--muted); }
+
+  .session-dur {
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--accent2);
+    text-align: right;
+  }
+
+  .session-dur.live {
+    color: var(--green);
+    animation: pulse 2s infinite;
+  }
+
+  .delete-btn {
+    background: none;
+    border: 1px solid transparent;
+    color: var(--muted);
+    cursor: pointer;
+    font-size: 14px;
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s;
+    font-family: var(--mono);
+  }
+
+  .delete-btn:hover {
+    border-color: var(--red);
+    color: var(--red);
+  }
+
+  .empty-msg {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--muted);
+    text-align: center;
+    padding: 20px 0;
+    letter-spacing: 1px;
+  }
+
+  /* Summary bar */
+  .summary-panel {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-bottom: 3px solid var(--accent2);
+    padding: 20px 32px;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 16px;
+  }
+
+  .stat {
+    text-align: center;
+  }
+
+  .stat-val {
+    font-family: var(--mono);
+    font-size: 22px;
+    color: #fff;
+    display: block;
+    margin-bottom: 4px;
+  }
+
+  .stat-lbl {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  /* Reset */
+  .footer {
+    margin-top: 20px;
+    display: flex;
+    justify-content: flex-end;
+  }
+
+  .reset-btn {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    font-family: var(--sans);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    padding: 8px 16px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .reset-btn:hover {
+    border-color: var(--red);
+    color: var(--red);
+  }
+
+  .toast {
+    position: fixed;
+    bottom: 32px;
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: var(--panel);
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: 1px;
+    padding: 10px 24px;
+    opacity: 0;
+    transition: all 0.3s;
+    pointer-events: none;
+    white-space: nowrap;
+  }
+
+  .toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <header>
+    <div class="logo">Work<span>LOG</span></div>
+    <div class="date-display" id="headerDate"></div>
+  </header>
+
+  <!-- Clock panel -->
+  <div class="clock-panel">
+    <div class="status-indicator">
+      <div class="status-dot" id="statusDot"></div>
+      <span id="statusText">IDLE</span>
+    </div>
+    <div class="label">Session Elapsed</div>
+    <div class="elapsed-display" id="elapsedDisplay">00:00:00</div>
+    <div class="elapsed-sub" id="elapsedSub">— not checked in —</div>
+    <div class="btn-row">
+      <button class="btn btn-in" id="btnIn" onclick="checkIn()">▶ Check In</button>
+      <button class="btn btn-out" id="btnOut" onclick="checkOut()" disabled>■ Check Out</button>
+    </div>
+  </div>
+
+  <!-- Sessions list -->
+  <div class="sessions-panel">
+    <div class="panel-header">
+      <div class="panel-title">Today's Sessions</div>
+      <div class="total-badge" id="totalBadge">00:00:00</div>
+    </div>
+    <div class="sessions-list" id="sessionsList">
+      <div class="empty-msg">NO SESSIONS YET</div>
+    </div>
+  </div>
+
+  <!-- Summary -->
+  <div class="summary-panel">
+    <div class="stat">
+      <span class="stat-val" id="statSessions">0</span>
+      <span class="stat-lbl">Sessions</span>
+    </div>
+    <div class="stat">
+      <span class="stat-val" id="statTotal">0h 00m</span>
+      <span class="stat-lbl">Total Today</span>
+    </div>
+    <div class="stat">
+      <span class="stat-val" id="statLast">—</span>
+      <span class="stat-lbl">Last Check-in</span>
+    </div>
+  </div>
+
+  <div class="footer">
+    <button class="reset-btn" onclick="resetDay()">✕ Reset Day</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  // State
+  let sessions = JSON.parse(localStorage.getItem('wl_sessions') || '[]');
+  let activeStart = localStorage.getItem('wl_activeStart') ? parseInt(localStorage.getItem('wl_activeStart')) : null;
+  let ticker = null;
+
+  // Init
+  function init() {
+    updateHeader();
+    render();
+    if (activeStart) {
+      startTicker();
+    }
+    setInterval(updateHeader, 1000);
+  }
+
+  function updateHeader() {
+    const now = new Date();
+    const days = ['SUN','MON','TUE','WED','THU','FRI','SAT'];
+    const months = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+    document.getElementById('headerDate').innerHTML =
+      `${days[now.getDay()]} ${now.getDate()} ${months[now.getMonth()]} ${now.getFullYear()}<br>${fmtTime(now)}`;
+  }
+
+  function fmtTime(d) {
+    return String(d.getHours()).padStart(2,'0') + ':' +
+           String(d.getMinutes()).padStart(2,'0') + ':' +
+           String(d.getSeconds()).padStart(2,'0');
+  }
+
+  function fmtDuration(ms) {
+    const s = Math.floor(ms / 1000);
+    const h = Math.floor(s / 3600);
+    const m = Math.floor((s % 3600) / 60);
+    const sec = s % 60;
+    return String(h).padStart(2,'0') + ':' + String(m).padStart(2,'0') + ':' + String(sec).padStart(2,'0');
+  }
+
+  function fmtDurShort(ms) {
+    const s = Math.floor(ms / 1000);
+    const h = Math.floor(s / 3600);
+    const m = Math.floor((s % 3600) / 60);
+    return h + 'h ' + String(m).padStart(2,'0') + 'm';
+  }
+
+  function save() {
+    localStorage.setItem('wl_sessions', JSON.stringify(sessions));
+    if (activeStart) {
+      localStorage.setItem('wl_activeStart', activeStart);
+    } else {
+      localStorage.removeItem('wl_activeStart');
+    }
+  }
+
+  function checkIn() {
+    if (activeStart) return;
+    activeStart = Date.now();
+    save();
+    startTicker();
+    render();
+    showToast('CHECKED IN');
+  }
+
+  function checkOut() {
+    if (!activeStart) return;
+    const end = Date.now();
+    sessions.push({ start: activeStart, end: end });
+    activeStart = null;
+    clearInterval(ticker);
+    ticker = null;
+    save();
+    render();
+    showToast('CHECKED OUT');
+  }
+
+  function deleteSession(i) {
+    sessions.splice(i, 1);
+    save();
+    render();
+  }
+
+  function resetDay() {
+    if (!confirm('Reset all sessions for today?')) return;
+    sessions = [];
+    activeStart = null;
+    clearInterval(ticker);
+    ticker = null;
+    save();
+    render();
+    showToast('DAY RESET');
+  }
+
+  function startTicker() {
+    if (ticker) clearInterval(ticker);
+    ticker = setInterval(() => {
+      updateElapsed();
+    }, 1000);
+    updateElapsed();
+  }
+
+  function updateElapsed() {
+    if (!activeStart) return;
+    const elapsed = Date.now() - activeStart;
+    document.getElementById('elapsedDisplay').textContent = fmtDuration(elapsed);
+    updateTotalBadge();
+    updateSessionsLive();
+  }
+
+  function totalMs() {
+    let t = sessions.reduce((a, s) => a + (s.end - s.start), 0);
+    if (activeStart) t += Date.now() - activeStart;
+    return t;
+  }
+
+  function updateTotalBadge() {
+    document.getElementById('totalBadge').textContent = fmtDuration(totalMs());
+    document.getElementById('statTotal').textContent = fmtDurShort(totalMs());
+  }
+
+  function updateSessionsLive() {
+    // Update only the live session row duration
+    const liveEl = document.querySelector('.session-dur.live');
+    if (liveEl && activeStart) {
+      liveEl.textContent = fmtDuration(Date.now() - activeStart);
+    }
+  }
+
+  function render() {
+    const isActive = !!activeStart;
+
+    // Status
+    document.getElementById('statusDot').className = 'status-dot' + (isActive ? ' active' : '');
+    document.getElementById('statusText').textContent = isActive ? 'WORKING' : 'IDLE';
+
+    // Elapsed
+    const elDisp = document.getElementById('elapsedDisplay');
+    elDisp.className = 'elapsed-display' + (isActive ? ' running' : '');
+    if (!isActive) {
+      elDisp.textContent = '00:00:00';
+      document.getElementById('elapsedSub').textContent = '— not checked in —';
+    } else {
+      const now = new Date(activeStart);
+      document.getElementById('elapsedSub').textContent = 'Since ' + fmtTime(now);
+    }
+
+    // Buttons
+    document.getElementById('btnIn').disabled = isActive;
+    document.getElementById('btnOut').disabled = !isActive;
+
+    // Sessions list
+    const list = document.getElementById('sessionsList');
+    if (sessions.length === 0 && !isActive) {
+      list.innerHTML = '<div class="empty-msg">NO SESSIONS YET</div>';
+    } else {
+      list.innerHTML = '';
+      sessions.forEach((s, i) => {
+        const dur = s.end - s.start;
+        const row = document.createElement('div');
+        row.className = 'session-row';
+        row.innerHTML = `
+          <span class="session-num">${String(i+1).padStart(2,'0')}</span>
+          <span class="session-time">${fmtTime(new Date(s.start))}</span>
+          <span class="session-time out">${fmtTime(new Date(s.end))}</span>
+          <span class="session-dur">${fmtDuration(dur)}</span>
+          <button class="delete-btn" onclick="deleteSession(${i})" title="Remove">✕</button>
+        `;
+        list.appendChild(row);
+      });
+
+      if (isActive) {
+        const row = document.createElement('div');
+        row.className = 'session-row';
+        row.innerHTML = `
+          <span class="session-num">${String(sessions.length+1).padStart(2,'0')}</span>
+          <span class="session-time">${fmtTime(new Date(activeStart))}</span>
+          <span class="session-time out" style="color: var(--green)">—:—:—</span>
+          <span class="session-dur live">${fmtDuration(Date.now() - activeStart)}</span>
+          <span style="width:28px"></span>
+        `;
+        list.appendChild(row);
+      }
+    }
+
+    // Stats
+    const count = sessions.length + (isActive ? 1 : 0);
+    document.getElementById('statSessions').textContent = count;
+    document.getElementById('statTotal').textContent = fmtDurShort(totalMs());
+
+    const allStarts = sessions.map(s => s.start).concat(isActive ? [activeStart] : []);
+    if (allStarts.length > 0) {
+      const last = new Date(Math.max(...allStarts));
+      document.getElementById('statLast').textContent = fmtTime(last).slice(0,5);
+    } else {
+      document.getElementById('statLast').textContent = '—';
+    }
+
+    updateTotalBadge();
+  }
+
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2000);
+  }
+
+  init();
+</script>
+</body>
+</html>
