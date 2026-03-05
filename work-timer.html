@@ -553,9 +553,25 @@
 <div class="toast" id="toast"></div>
 
 <script>
-  // State
-  let sessions = JSON.parse(localStorage.getItem('wl_sessions') || '[]');
-  let activeStart = localStorage.getItem('wl_activeStart') ? parseInt(localStorage.getItem('wl_activeStart')) : null;
+  // Helpers
+  function todayKey() {
+    const d = new Date();
+    return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+  }
+  function isToday(ms) {
+    const d = new Date(ms), t = new Date();
+    return d.getFullYear()===t.getFullYear() && d.getMonth()===t.getMonth() && d.getDate()===t.getDate();
+  }
+
+  // State — keyed per day so data is automatically isolated
+  const storageKey = 'wl_sessions_' + todayKey();
+  let sessions = JSON.parse(localStorage.getItem(storageKey) || '[]');
+
+  // Restore active check-in only if it started today
+  let rawStart = localStorage.getItem('wl_activeStart') ? parseInt(localStorage.getItem('wl_activeStart')) : null;
+  let activeStart = (rawStart && isToday(rawStart)) ? rawStart : null;
+  if (!activeStart && rawStart) localStorage.removeItem('wl_activeStart');
+
   let ticker = null;
 
   // Init
@@ -644,7 +660,7 @@
   }
 
   function save() {
-    localStorage.setItem('wl_sessions', JSON.stringify(sessions));
+    localStorage.setItem(storageKey, JSON.stringify(sessions));
     if (activeStart) {
       localStorage.setItem('wl_activeStart', activeStart);
     } else {
