@@ -306,6 +306,89 @@
     letter-spacing: 1px;
   }
 
+  /* Progress bar */
+  .progress-panel {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    padding: 20px 32px;
+    margin-bottom: 16px;
+  }
+
+  .progress-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+
+  .progress-label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .progress-pct {
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--accent);
+  }
+
+  .progress-track {
+    width: 100%;
+    height: 6px;
+    background: var(--border);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: var(--accent);
+    transition: width 1s linear, background 0.5s;
+    position: relative;
+  }
+
+  .progress-fill.done { background: var(--green); }
+  .progress-fill::after {
+    content: '';
+    position: absolute;
+    right: 0; top: 0; bottom: 0;
+    width: 4px;
+    background: rgba(255,255,255,0.4);
+  }
+
+  .remaining-row {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 10px;
+  }
+
+  .remaining-item {
+    text-align: center;
+    flex: 1;
+  }
+
+  .remaining-val {
+    font-family: var(--mono);
+    font-size: 18px;
+    color: #fff;
+    display: block;
+    margin-bottom: 3px;
+  }
+
+  .remaining-val.done { color: var(--green); }
+  .remaining-val.warning { color: var(--accent2); }
+
+  .remaining-lbl {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
   /* Summary bar */
   .summary-panel {
     background: var(--panel);
@@ -421,6 +504,31 @@
     </div>
   </div>
 
+  <!-- Progress to 8h -->
+  <div class="progress-panel">
+    <div class="progress-header">
+      <div class="progress-label">Progress to 8h Goal</div>
+      <div class="progress-pct" id="progressPct">0%</div>
+    </div>
+    <div class="progress-track">
+      <div class="progress-fill" id="progressFill" style="width:0%"></div>
+    </div>
+    <div class="remaining-row">
+      <div class="remaining-item">
+        <span class="remaining-val" id="remainingVal">08:00:00</span>
+        <span class="remaining-lbl">Remaining</span>
+      </div>
+      <div class="remaining-item" style="border-left: 1px solid var(--border); border-right: 1px solid var(--border);">
+        <span class="remaining-val" id="etaVal">—:——</span>
+        <span class="remaining-lbl">ETA if continuous</span>
+      </div>
+      <div class="remaining-item">
+        <span class="remaining-val" id="extraVal">—</span>
+        <span class="remaining-lbl">Overtime</span>
+      </div>
+    </div>
+  </div>
+
   <!-- Summary -->
   <div class="summary-panel">
     <div class="stat">
@@ -487,6 +595,52 @@
     const h = Math.floor(s / 3600);
     const m = Math.floor((s % 3600) / 60);
     return h + 'h ' + String(m).padStart(2,'0') + 'm';
+  }
+
+  const GOAL_MS = 8 * 60 * 60 * 1000; // 8 hours
+
+  function updateProgress() {
+    const worked = totalMs();
+    const remaining = Math.max(0, GOAL_MS - worked);
+    const overtime = worked > GOAL_MS ? worked - GOAL_MS : 0;
+    const pct = Math.min(100, (worked / GOAL_MS) * 100);
+    const done = worked >= GOAL_MS;
+
+    // Progress bar
+    const fill = document.getElementById('progressFill');
+    fill.style.width = pct.toFixed(1) + '%';
+    fill.className = 'progress-fill' + (done ? ' done' : '');
+    document.getElementById('progressPct').textContent = Math.floor(pct) + '%';
+
+    // Remaining
+    const remEl = document.getElementById('remainingVal');
+    remEl.textContent = done ? '00:00:00' : fmtDuration(remaining);
+    remEl.className = 'remaining-val' + (done ? ' done' : (pct >= 75 ? ' warning' : ''));
+
+    // ETA (only when checked in)
+    const etaEl = document.getElementById('etaVal');
+    if (!done && activeStart && remaining > 0) {
+      const etaMs = Date.now() + remaining;
+      const eta = new Date(etaMs);
+      etaEl.textContent = String(eta.getHours()).padStart(2,'0') + ':' + String(eta.getMinutes()).padStart(2,'0');
+      etaEl.className = 'remaining-val';
+    } else if (done) {
+      etaEl.textContent = '✓ DONE';
+      etaEl.className = 'remaining-val done';
+    } else {
+      etaEl.textContent = '—:——';
+      etaEl.className = 'remaining-val';
+    }
+
+    // Overtime
+    const extraEl = document.getElementById('extraVal');
+    if (overtime > 0) {
+      extraEl.textContent = '+' + fmtDurShort(overtime);
+      extraEl.className = 'remaining-val done';
+    } else {
+      extraEl.textContent = '—';
+      extraEl.className = 'remaining-val';
+    }
   }
 
   function save() {
@@ -561,6 +715,7 @@
   function updateTotalBadge() {
     document.getElementById('totalBadge').textContent = fmtDuration(totalMs());
     document.getElementById('statTotal').textContent = fmtDurShort(totalMs());
+    updateProgress();
   }
 
   function updateSessionsLive() {
@@ -641,6 +796,7 @@
     }
 
     updateTotalBadge();
+    updateProgress();
   }
 
   function showToast(msg) {
