@@ -53,6 +53,7 @@ final class WorkTimerState {
         out.put("radiusMeters", prefs.getFloat("radius", 150));
         out.put("insideGeofence", prefs.getBoolean("inside", false));
         out.put("manualSuppressed", prefs.getBoolean("manual_suppressed", false));
+        out.put("fineLocationGranted", GeofenceController.hasFinePermission(context));
         out.put("backgroundLocationGranted", GeofenceController.hasBackgroundPermission(context));
         return out;
     }
