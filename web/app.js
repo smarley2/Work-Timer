@@ -2,6 +2,7 @@ const native = window.Capacitor?.Plugins?.WorkTimer;
 const $ = id => document.getElementById(id);
 let state = null;
 let settingsDirty = false;
+let lastStateRefresh = 0;
 
 const fmt = ms => {const s=Math.max(0,Math.floor(ms/1000)),h=Math.floor(s/3600),m=Math.floor(s%3600/60);return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`};
 const clock = ms => new Date(ms).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
@@ -13,7 +14,27 @@ async function call(method, options={}) {
 }
 
 async function refresh() {
-  try { state = await call('getState'); render(); } catch (e) { $('permissionState').textContent=e.message; }
+  try { state = await call('getState'); lastStateRefresh=Date.now(); render(); } catch (e) { $('permissionState').textContent=e.message; }
+}
+
+function renderLocationStatus() {
+  const status=$('geofenceStatus');
+  if (!state.geoEnabled) {
+    status.className='geofence-status off';
+    $('geofenceStatusText').textContent='AUTOMATIC LOCATION OFF';
+  } else if (!state.fineLocationGranted || !state.backgroundLocationGranted) {
+    status.className='geofence-status warning';
+    $('geofenceStatusText').textContent='LOCATION PERMISSION NEEDED';
+  } else if (!state.geofenceMonitoringActive) {
+    status.className='geofence-status warning';
+    $('geofenceStatusText').textContent='LOCATION MONITOR STARTING';
+  } else if (state.insideGeofence) {
+    status.className='geofence-status inside';
+    $('geofenceStatusText').textContent='INSIDE WORK AREA';
+  } else {
+    status.className='geofence-status outside';
+    $('geofenceStatusText').textContent='OUTSIDE WORK AREA';
+  }
 }
 
 function render() {
@@ -25,6 +46,7 @@ function render() {
   $('statusDot').className=active?'active':'';$('statusText').textContent=active?'WORKING':'IDLE';
   $('elapsed').className='elapsed'+(active?' active':'');$('elapsed').textContent=fmt(running);
   $('since').textContent=active?`Since ${clock(state.activeStart)} · ${state.activeSource==='geofence'?'location':'manual'}`:'— timer stopped —';
+  renderLocationStatus();
   $('checkIn').disabled=active;$('checkOut').disabled=!active;
   $('total').textContent=fmt(total);$('remaining').textContent=fmt(remaining);$('percent').textContent=`${Math.floor(pct)}%`;
   $('bar').style.width=`${pct}%`;$('bar').className=pct>=100?'done':'';
@@ -51,5 +73,6 @@ $('permissions').onclick=async()=>{try{const result=await call('requestPermissio
 $('saveSettings').onclick=async()=>{try{await call('configure',{goalMinutes:Math.round(Number($('goalHours').value)*60),geoEnabled:$('geoEnabled').checked,latitude:Number($('latitude').value),longitude:Number($('longitude').value),radiusMeters:Number($('radius').value)});settingsDirty=false;await refresh();toast('SETTINGS SAVED')}catch(e){toast(e.message)}};
 $('resetDay').onclick=async()=>{if(confirm('Delete all sessions for today?')){await call('resetDay');await refresh();toast('DAY RESET')}};
 
-setInterval(()=>{const d=new Date();$('date').innerHTML=d.toLocaleDateString('en-US', {weekday:'short',day:'2-digit',month:'short',year:'numeric'}).toUpperCase()+`<br>${d.toLocaleTimeString('en-US')}`;if(state)render()},1000);
+document.addEventListener?.('visibilitychange',()=>{if(!document.hidden)refresh()});
+setInterval(()=>{const d=new Date();$('date').innerHTML=d.toLocaleDateString('en-US', {weekday:'short',day:'2-digit',month:'short',year:'numeric'}).toUpperCase()+`<br>${d.toLocaleTimeString('en-US')}`;if(!state||Date.now()-lastStateRefresh>=15000)refresh();else render()},1000);
 refresh();
