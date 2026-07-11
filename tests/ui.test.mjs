@@ -15,7 +15,7 @@ test('geofence form stays open and current-location button fills coordinates', a
   let permissionCalls=0;
   const native={
     async getState(){return {activeStart:null,completedMs:0,goalMinutes:480,sessions:[],geoEnabled:false,latitude:0,longitude:0,radiusMeters:150,fineLocationGranted:false,backgroundLocationGranted:false}},
-    async requestPermissions(){permissionCalls++;return {next:'Selecione localização precisa.'}},
+    async requestPermissions(){permissionCalls++;return {next:'Select precise location.'}},
     async getCurrentLocation(){return {latitude:47.17,longitude:9.47}},
     async configure(){},async startManual(){},async stopManual(){},async resetDay(){}
   };
