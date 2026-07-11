@@ -28,6 +28,9 @@ function renderLocationStatus() {
   } else if (!state.geofenceMonitoringActive) {
     status.className='geofence-status warning';
     $('geofenceStatusText').textContent='LOCATION MONITOR STARTING';
+  } else if (!state.geofenceStateKnown) {
+    status.className='geofence-status warning';
+    $('geofenceStatusText').textContent='DETERMINING WORK AREA';
   } else if (state.insideGeofence) {
     status.className='geofence-status inside';
     $('geofenceStatusText').textContent='INSIDE WORK AREA';
