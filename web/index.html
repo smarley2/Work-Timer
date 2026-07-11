@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="pt-BR">
+<html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
@@ -12,10 +12,10 @@
     <header><h1>WORK<span>LOG</span></h1><div id="date"></div></header>
 
     <section class="card clock">
-      <div class="status"><i id="statusDot"></i><span id="statusText">PARADO</span></div>
-      <label>SESSÃO ATUAL</label>
+      <div class="status"><i id="statusDot"></i><span id="statusText">IDLE</span></div>
+      <label>CURRENT SESSION</label>
       <div id="elapsed" class="elapsed">00:00:00</div>
-      <p id="since">— timer parado —</p>
+      <p id="since">— timer stopped —</p>
       <div class="actions">
         <button id="checkIn" class="start">▶ CHECK IN</button>
         <button id="checkOut" class="stop" disabled>■ CHECK OUT</button>
@@ -23,44 +23,44 @@
     </section>
 
     <section class="card progress">
-      <div class="row"><label id="goalLabel">META DIÁRIA</label><strong id="percent">0%</strong></div>
+      <div class="row"><label id="goalLabel">DAILY GOAL</label><strong id="percent">0%</strong></div>
       <div class="track"><div id="bar"></div></div>
       <div class="metrics">
-        <div><strong id="total">00:00:00</strong><small>TRABALHADO</small></div>
-        <div><strong id="remaining">08:00:00</strong><small>RESTANTE</small></div>
-        <div><strong id="eta">—:—</strong><small>PREVISÃO</small></div>
+        <div><strong id="total">00:00:00</strong><small>WORKED</small></div>
+        <div><strong id="remaining">08:00:00</strong><small>REMAINING</small></div>
+        <div><strong id="eta">—:—</strong><small>ETA</small></div>
       </div>
     </section>
 
     <section class="card">
-      <div class="row"><label>SESSÕES DE HOJE</label><span id="sessionCount">0</span></div>
-      <div id="sessions" class="sessions"><p class="empty">NENHUMA SESSÃO</p></div>
+      <div class="row"><label>TODAY'S SESSIONS</label><span id="sessionCount">0</span></div>
+      <div id="sessions" class="sessions"><p class="empty">NO SESSIONS</p></div>
     </section>
 
     <section class="card settings">
-      <div class="row"><label>CONFIGURAÇÕES</label><button id="toggleSettings" class="link">ABRIR</button></div>
+      <div class="row"><label>SETTINGS</label><button id="toggleSettings" class="link">OPEN</button></div>
       <div id="settingsBody" hidden>
-        <label for="goalHours">Meta diária (horas)</label>
+        <label for="goalHours">Daily goal (hours)</label>
         <input id="goalHours" type="number" min="0.25" max="24" step="0.25" value="8">
 
         <div class="switch-row">
-          <div><b>Geolocalização automática</b><small>Check-in ao entrar e pausa ao sair</small></div>
+          <div><b>Automatic location</b><small>Check in on entry and pause on exit</small></div>
           <input id="geoEnabled" type="checkbox">
         </div>
         <div id="geoFields" hidden>
-          <button id="useLocation" class="primary">USAR LOCALIZAÇÃO ATUAL COMO REFERÊNCIA</button>
+          <button id="useLocation" class="primary">USE CURRENT LOCATION AS WORKPLACE</button>
           <label for="latitude">Latitude</label><input id="latitude" type="number" step="any">
           <label for="longitude">Longitude</label><input id="longitude" type="number" step="any">
-          <label for="radius">Raio (metros)</label><input id="radius" type="number" min="50" max="1000" step="10" value="150">
-          <p class="hint">Para funcionar fechado, permita localização “o tempo todo” nas configurações do Android.</p>
+          <label for="radius">Radius (meters)</label><input id="radius" type="number" min="50" max="1000" step="10" value="150">
+          <p class="hint">To work while closed, allow location “all the time” in Android settings.</p>
         </div>
-        <button id="saveSettings" class="primary">SALVAR CONFIGURAÇÕES</button>
-        <button id="permissions" class="secondary">CONFIGURAR PERMISSÕES</button>
+        <button id="saveSettings" class="primary">SAVE SETTINGS</button>
+        <button id="permissions" class="secondary">CONFIGURE PERMISSIONS</button>
         <p id="permissionState" class="hint"></p>
       </div>
     </section>
 
-    <button id="resetDay" class="reset">RESETAR O DIA</button>
+    <button id="resetDay" class="reset">RESET DAY</button>
   </main>
   <div id="toast" class="toast"></div>
   <script src="app.js"></script>
