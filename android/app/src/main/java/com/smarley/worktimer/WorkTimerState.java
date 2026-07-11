@@ -55,6 +55,8 @@ final class WorkTimerState {
         out.put("manualSuppressed", prefs.getBoolean("manual_suppressed", false));
         out.put("fineLocationGranted", GeofenceController.hasFinePermission(context));
         out.put("backgroundLocationGranted", GeofenceController.hasBackgroundPermission(context));
+        out.put("geofenceMonitoringActive", prefs.getBoolean("geofence_registered", false));
+        out.put("geofenceStateKnown", prefs.getBoolean("geofence_state_known", false));
         return out;
     }
 
@@ -63,8 +65,9 @@ final class WorkTimerState {
         if (geoEnabled && (lat < -90 || lat > 90 || lon < -180 || lon > 180 || (lat == 0 && lon == 0))) throw new IllegalArgumentException("Enter a valid workplace location.");
         prefs.edit().putInt("goal_minutes", goalMinutes).putBoolean("geo_enabled", geoEnabled)
             .putLong("latitude", Double.doubleToRawLongBits(lat)).putLong("longitude", Double.doubleToRawLongBits(lon))
-            .putFloat("radius", Math.max(50, Math.min(radius, 1000))).remove("goal_notified_day").apply();
-        if (!geoEnabled) prefs.edit().putBoolean("inside", false).putBoolean("manual_suppressed", false).apply();
+            .putFloat("radius", Math.max(100, Math.min(radius, 1000))).remove("goal_notified_day").apply();
+        if (!geoEnabled) prefs.edit().putBoolean("inside", false).putBoolean("manual_suppressed", false)
+            .putBoolean("geofence_registered", false).putBoolean("geofence_state_known", false).apply();
         GeofenceController.sync(context);
         scheduleGoal();
     }
@@ -90,12 +93,12 @@ final class WorkTimerState {
     }
 
     synchronized void onEnter() {
-        prefs.edit().putBoolean("inside", true).apply();
+        prefs.edit().putBoolean("inside", true).putBoolean("geofence_state_known", true).apply();
         if (prefs.getBoolean("geo_enabled", false) && !prefs.getBoolean("manual_suppressed", false)) start("geofence");
     }
 
     synchronized void onExit() {
-        prefs.edit().putBoolean("inside", false).putBoolean("manual_suppressed", false).apply();
+        prefs.edit().putBoolean("inside", false).putBoolean("manual_suppressed", false).putBoolean("geofence_state_known", true).apply();
         if (prefs.getBoolean("geo_enabled", false)) stop(false);
     }
 
