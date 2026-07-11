@@ -9,7 +9,7 @@ An Android app that records work hours through manual check-in/check-out or an o
 - The main screen shows whether automatic location is off, waiting for permission, determining the area, inside the work area, or outside the work area.
 - A manual check-out while inside the workplace overrides the geofence. Automatic tracking resumes only after the user exits and enters again.
 - Automatic location is optional and disabled by default.
-- Sessions that cross midnight are split. The new day starts in zero and continues counting if the session remained active.
+- Sessions that cross midnight are split. The new day starts at zero and continues counting if the session remained active.
 - The daily goal is configurable from 15 minutes to 24 hours.
 - Android sends one sound and vibration alert when the daily goal is reached.
 - Geofences and alarms are restored after a reboot or app update.
