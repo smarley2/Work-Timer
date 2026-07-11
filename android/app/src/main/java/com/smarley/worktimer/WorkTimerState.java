@@ -59,8 +59,8 @@ final class WorkTimerState {
     }
 
     synchronized void configure(int goalMinutes, boolean geoEnabled, double lat, double lon, float radius) {
-        if (goalMinutes < 15 || goalMinutes > 1440) throw new IllegalArgumentException("A meta deve estar entre 15 minutos e 24 horas.");
-        if (geoEnabled && (lat < -90 || lat > 90 || lon < -180 || lon > 180 || (lat == 0 && lon == 0))) throw new IllegalArgumentException("Informe uma localização válida.");
+        if (goalMinutes < 15 || goalMinutes > 1440) throw new IllegalArgumentException("The goal must be between 15 minutes and 24 hours.");
+        if (geoEnabled && (lat < -90 || lat > 90 || lon < -180 || lon > 180 || (lat == 0 && lon == 0))) throw new IllegalArgumentException("Enter a valid workplace location.");
         prefs.edit().putInt("goal_minutes", goalMinutes).putBoolean("geo_enabled", geoEnabled)
             .putLong("latitude", Double.doubleToRawLongBits(lat)).putLong("longitude", Double.doubleToRawLongBits(lon))
             .putFloat("radius", Math.max(50, Math.min(radius, 1000))).remove("goal_notified_day").apply();
@@ -130,8 +130,8 @@ final class WorkTimerState {
         Intent open = context.getPackageManager().getLaunchIntentForPackage(context.getPackageName());
         PendingIntent content = PendingIntent.getActivity(context, 20, open, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
         NotificationCompat.Builder n = new NotificationCompat.Builder(context, CHANNEL)
-            .setSmallIcon(android.R.drawable.ic_lock_idle_alarm).setContentTitle("Meta diária atingida")
-            .setContentText("Você atingiu " + (prefs.getInt("goal_minutes",480) / 60.0) + " horas de trabalho hoje.")
+            .setSmallIcon(android.R.drawable.ic_lock_idle_alarm).setContentTitle("Daily goal reached")
+            .setContentText("You worked " + (prefs.getInt("goal_minutes",480) / 60.0) + " hours today.")
             .setPriority(NotificationCompat.PRIORITY_HIGH).setAutoCancel(true).setContentIntent(content)
             .setDefaults(NotificationCompat.DEFAULT_ALL);
         context.getSystemService(NotificationManager.class).notify(1001, n.build());
@@ -162,5 +162,5 @@ final class WorkTimerState {
     private static String today(){return dayOf(System.currentTimeMillis());}
     private static String dayOf(long ms){return new SimpleDateFormat("yyyy-MM-dd",Locale.US).format(new Date(ms));}
     private static long startOfNextDay(long ms){Calendar c=Calendar.getInstance();c.setTimeInMillis(ms);c.add(Calendar.DAY_OF_YEAR,1);c.set(Calendar.HOUR_OF_DAY,0);c.set(Calendar.MINUTE,0);c.set(Calendar.SECOND,0);c.set(Calendar.MILLISECOND,0);return c.getTimeInMillis();}
-    private void createChannel(){if(Build.VERSION.SDK_INT>=26){NotificationChannel c=new NotificationChannel(CHANNEL,"Metas diárias",NotificationManager.IMPORTANCE_HIGH);c.setDescription("Alarme quando a meta diária é atingida");c.enableVibration(true);context.getSystemService(NotificationManager.class).createNotificationChannel(c);}}
+    private void createChannel(){if(Build.VERSION.SDK_INT>=26){NotificationChannel c=new NotificationChannel(CHANNEL,"Daily goals",NotificationManager.IMPORTANCE_HIGH);c.setDescription("Alerts when the daily work goal is reached");c.enableVibration(true);context.getSystemService(NotificationManager.class).createNotificationChannel(c);}}
 }
