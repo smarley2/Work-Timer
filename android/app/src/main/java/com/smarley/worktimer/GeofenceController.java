@@ -29,7 +29,9 @@ final class GeofenceController {
         Geofence fence=new Geofence.Builder().setRequestId(ID).setCircularRegion(lat,lon,p.getFloat("radius",150))
             .setExpirationDuration(Geofence.NEVER_EXPIRE).setTransitionTypes(Geofence.GEOFENCE_TRANSITION_ENTER|Geofence.GEOFENCE_TRANSITION_EXIT)
             .setNotificationResponsiveness(120000).build();
-        GeofencingRequest req=new GeofencingRequest.Builder().setInitialTrigger(GeofencingRequest.INITIAL_TRIGGER_ENTER).addGeofence(fence).build();
+        GeofencingRequest req=new GeofencingRequest.Builder()
+            .setInitialTrigger(GeofencingRequest.INITIAL_TRIGGER_ENTER|GeofencingRequest.INITIAL_TRIGGER_EXIT)
+            .addGeofence(fence).build();
         p.edit().putBoolean("geofence_registered",false).putBoolean("geofence_state_known",false).apply();
         try{
             LocationServices.getGeofencingClient(app).addGeofences(req,intent(app))
