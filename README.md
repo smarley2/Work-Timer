@@ -1,60 +1,62 @@
 # Work Timer
 
-Aplicativo Android para registrar horas trabalhadas por check-in/check-out manual ou por uma geofence opcional.
+An Android app that records work hours through manual check-in/check-out or an optional workplace geofence.
 
-## Regras implementadas
+## Implemented rules
 
-- Check-in e check-out manuais podem ser usados quantas vezes forem necessários.
-- Com geolocalização ativada, entrar na área inicia o timer e sair pausa o timer.
-- Um check-out manual dentro da área prevalece sobre a geofence. O timer só volta a iniciar automaticamente depois que o usuário sair e entrar novamente.
-- A geolocalização é opcional e vem desativada.
-- Sessões que atravessam a meia-noite são divididas. O novo dia começa em zero e continua contando se a sessão permanecia ativa.
-- A meta diária é configurável entre 15 minutos e 24 horas.
-- Ao atingir a meta, o Android emite uma notificação sonora uma vez naquele dia.
-- Geofence e alarmes são restaurados após reinicialização ou atualização do aplicativo.
+- Manual check-in and check-out can be used as many times as needed.
+- With automatic location enabled, entering the workplace starts the timer and leaving pauses it.
+- A manual check-out while inside the workplace overrides the geofence. Automatic tracking resumes only after the user exits and enters again.
+- Automatic location is optional and disabled by default.
+- Sessions that cross midnight are split. The new day starts at zero and continues counting if the session remains active.
+- The daily goal is configurable from 15 minutes to 24 hours.
+- Android sends one sound and vibration alert when the daily goal is reached.
+- Geofences and alarms are restored after a reboot or app update.
 
-## Tecnologia
+## Technology
 
-- Interface web empacotada com Capacitor 8.
-- Integração Android nativa em Java.
-- Google Play Services Location para geofencing.
-- `AlarmManager`, `BroadcastReceiver` e notificações Android para meta e troca do dia.
-- Dados locais em `SharedPreferences`, separados pela data local do aparelho.
+- Web interface packaged with Capacitor 8.
+- Native Android integration in Java.
+- Google Play Services Location for geofencing.
+- `AlarmManager`, `BroadcastReceiver`, and Android notifications for daily goals and midnight rollover.
+- Local data stored in `SharedPreferences` and separated by the device's local date.
 
-## Preparar o projeto
+## Set up the project
 
-Requisitos: Node.js, Android Studio, Android SDK e JDK compatíveis com o Capacitor 8.
+Requirements: Node.js, Android Studio, Android SDK, and a JDK compatible with Capacitor 8.
 
 ```bash
 npm install
+npm run test:web
 npm run android:sync
 npm run android:open
 ```
 
-O diretório `android/` já está versionado. Não execute `npm run android:add` novamente quando ele já existir.
+The `android/` directory is already versioned. Do not run `npm run android:add` when it already exists.
 
-## Permissões no celular
+## Configure permissions on a device
 
-1. Abra **Configurações** no aplicativo.
-2. Defina a meta diária.
-3. Ative a geolocalização somente se desejar o controle automático.
-4. Toque em **Configurar permissões** e permita localização precisa e notificações.
-5. Toque novamente no botão e, nas configurações do Android, escolha localização **Permitir o tempo todo**.
-6. Use **Usar localização atual** ou informe as coordenadas e o raio manualmente.
+1. Open **Settings** in the app.
+2. Set the daily goal.
+3. Enable automatic location only when workplace-based tracking is wanted.
+4. Select precise location when Android asks for location permission.
+5. Tap **Configure permissions** again and select **Allow all the time** in Android settings.
+6. Tap **Use current location as workplace** or enter the coordinates and radius manually.
+7. Save the settings.
 
-O Android pode atrasar transições de geofence por economia de bateria. Um raio inicial entre 100 e 200 metros é recomendado.
+Android can delay geofence transitions to conserve battery. An initial radius between 100 and 200 meters is recommended.
 
-## Gerar APK de teste
+## Build a debug APK
 
-No Android Studio, use **Build > Build APK(s)**. Pela linha de comando:
+In Android Studio, use **Build > Build APK(s)**. From the command line:
 
 ```bash
 cd android
 ./gradlew assembleDebug
 ```
 
-O APK será criado em `android/app/build/outputs/apk/debug/`.
+The APK is created in `android/app/build/outputs/apk/debug/`.
 
-## Publicação
+## Google Play release
 
-Antes de publicar no Google Play, substitua os ícones e splash screens padrão, configure assinatura de release e prepare a justificativa de localização em segundo plano. A Play Store permite essa permissão somente quando ela é essencial e claramente explicada ao usuário.
+Before publishing, replace the default icon and splash screen, configure release signing, build a signed Android App Bundle, add an in-app background-location disclosure and privacy-policy link, and complete Google Play's background-location declaration.
