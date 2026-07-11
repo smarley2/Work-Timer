@@ -1,0 +1,8 @@
+{
+  "appId": "com.smarley.worktimer",
+  "appName": "Work Timer",
+  "webDir": "web",
+  "server": {
+    "androidScheme": "https"
+  }
+}
