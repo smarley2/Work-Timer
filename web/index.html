@@ -16,6 +16,7 @@
       <label>CURRENT SESSION</label>
       <div id="elapsed" class="elapsed">00:00:00</div>
       <p id="since">— timer stopped —</p>
+      <div id="geofenceStatus" class="geofence-status off" aria-live="polite"><i></i><span id="geofenceStatusText">AUTOMATIC LOCATION OFF</span></div>
       <div class="actions">
         <button id="checkIn" class="start">▶ CHECK IN</button>
         <button id="checkOut" class="stop" disabled>■ CHECK OUT</button>
@@ -51,8 +52,8 @@
           <button id="useLocation" class="primary">USE CURRENT LOCATION AS WORKPLACE</button>
           <label for="latitude">Latitude</label><input id="latitude" type="number" step="any">
           <label for="longitude">Longitude</label><input id="longitude" type="number" step="any">
-          <label for="radius">Radius (meters)</label><input id="radius" type="number" min="50" max="1000" step="10" value="150">
-          <p class="hint">To work while closed, allow location “all the time” in Android settings.</p>
+          <label for="radius">Radius (meters)</label><input id="radius" type="number" min="100" max="1000" step="10" value="150">
+          <p class="hint">A radius of at least 100 meters improves reliability and reduces battery use. To work while closed, allow location “all the time” in Android settings.</p>
         </div>
         <button id="saveSettings" class="primary">SAVE SETTINGS</button>
         <button id="permissions" class="secondary">CONFIGURE PERMISSIONS</button>
