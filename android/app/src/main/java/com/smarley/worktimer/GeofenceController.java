@@ -19,13 +19,22 @@ final class GeofenceController {
     static PendingIntent intent(Context c){return PendingIntent.getBroadcast(c,30,new Intent(c,GeofenceReceiver.class),PendingIntent.FLAG_UPDATE_CURRENT|(Build.VERSION.SDK_INT>=31?PendingIntent.FLAG_MUTABLE:0));}
     static void sync(Context c){
         Context app=c.getApplicationContext(); SharedPreferences p=app.getSharedPreferences(WorkTimerState.PREFS,Context.MODE_PRIVATE);
-        if(!p.getBoolean("geo_enabled",false)||!hasFinePermission(app)||!hasBackgroundPermission(app)){LocationServices.getGeofencingClient(app).removeGeofences(intent(app));return;}
+        if(!p.getBoolean("geo_enabled",false)||!hasFinePermission(app)||!hasBackgroundPermission(app)){
+            p.edit().putBoolean("geofence_registered",false).apply();
+            LocationServices.getGeofencingClient(app).removeGeofences(intent(app));
+            return;
+        }
         double lat=Double.longBitsToDouble(p.getLong("latitude",0)),lon=Double.longBitsToDouble(p.getLong("longitude",0));
-        if(lat==0&&lon==0)return;
+        if(lat==0&&lon==0){p.edit().putBoolean("geofence_registered",false).apply();return;}
         Geofence fence=new Geofence.Builder().setRequestId(ID).setCircularRegion(lat,lon,p.getFloat("radius",150))
             .setExpirationDuration(Geofence.NEVER_EXPIRE).setTransitionTypes(Geofence.GEOFENCE_TRANSITION_ENTER|Geofence.GEOFENCE_TRANSITION_EXIT)
             .setNotificationResponsiveness(60000).build();
         GeofencingRequest req=new GeofencingRequest.Builder().setInitialTrigger(GeofencingRequest.INITIAL_TRIGGER_ENTER).addGeofence(fence).build();
-        try{LocationServices.getGeofencingClient(app).addGeofences(req,intent(app));}catch(SecurityException ignored){}
+        p.edit().putBoolean("geofence_registered",false).apply();
+        try{
+            LocationServices.getGeofencingClient(app).addGeofences(req,intent(app))
+                .addOnSuccessListener(unused->p.edit().putBoolean("geofence_registered",true).apply())
+                .addOnFailureListener(error->p.edit().putBoolean("geofence_registered",false).apply());
+        }catch(SecurityException ignored){p.edit().putBoolean("geofence_registered",false).apply();}
     }
 }
