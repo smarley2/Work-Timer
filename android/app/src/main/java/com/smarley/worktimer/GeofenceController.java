@@ -20,17 +20,17 @@ final class GeofenceController {
     static void sync(Context c){
         Context app=c.getApplicationContext(); SharedPreferences p=app.getSharedPreferences(WorkTimerState.PREFS,Context.MODE_PRIVATE);
         if(!p.getBoolean("geo_enabled",false)||!hasFinePermission(app)||!hasBackgroundPermission(app)){
-            p.edit().putBoolean("geofence_registered",false).apply();
+            p.edit().putBoolean("geofence_registered",false).putBoolean("geofence_state_known",false).apply();
             LocationServices.getGeofencingClient(app).removeGeofences(intent(app));
             return;
         }
         double lat=Double.longBitsToDouble(p.getLong("latitude",0)),lon=Double.longBitsToDouble(p.getLong("longitude",0));
-        if(lat==0&&lon==0){p.edit().putBoolean("geofence_registered",false).apply();return;}
+        if(lat==0&&lon==0){p.edit().putBoolean("geofence_registered",false).putBoolean("geofence_state_known",false).apply();return;}
         Geofence fence=new Geofence.Builder().setRequestId(ID).setCircularRegion(lat,lon,p.getFloat("radius",150))
             .setExpirationDuration(Geofence.NEVER_EXPIRE).setTransitionTypes(Geofence.GEOFENCE_TRANSITION_ENTER|Geofence.GEOFENCE_TRANSITION_EXIT)
-            .setNotificationResponsiveness(60000).build();
+            .setNotificationResponsiveness(120000).build();
         GeofencingRequest req=new GeofencingRequest.Builder().setInitialTrigger(GeofencingRequest.INITIAL_TRIGGER_ENTER).addGeofence(fence).build();
-        p.edit().putBoolean("geofence_registered",false).apply();
+        p.edit().putBoolean("geofence_registered",false).putBoolean("geofence_state_known",false).apply();
         try{
             LocationServices.getGeofencingClient(app).addGeofences(req,intent(app))
                 .addOnSuccessListener(unused->p.edit().putBoolean("geofence_registered",true).apply())
