@@ -27,13 +27,13 @@ public class WorkTimerPlugin extends Plugin {
         if(ContextCompat.checkSelfPermission(getContext(),Manifest.permission.ACCESS_COARSE_LOCATION)!=PackageManager.PERMISSION_GRANTED)needed.add(Manifest.permission.ACCESS_COARSE_LOCATION);
         if(ContextCompat.checkSelfPermission(getContext(),Manifest.permission.ACCESS_FINE_LOCATION)!=PackageManager.PERMISSION_GRANTED)needed.add(Manifest.permission.ACCESS_FINE_LOCATION);
         if(Build.VERSION.SDK_INT>=33&&ContextCompat.checkSelfPermission(getContext(),Manifest.permission.POST_NOTIFICATIONS)!=PackageManager.PERMISSION_GRANTED)needed.add(Manifest.permission.POST_NOTIFICATIONS);
-        if(!needed.isEmpty()){ActivityCompat.requestPermissions(getActivity(),needed.toArray(new String[0]),909);JSObject result=new JSObject();result.put("next","Selecione localização precisa. Depois toque novamente para permitir o tempo todo.");call.resolve(result);return;}
+        if(!needed.isEmpty()){ActivityCompat.requestPermissions(getActivity(),needed.toArray(new String[0]),909);JSObject result=new JSObject();result.put("next","Select precise location. Then tap again to allow location all the time.");call.resolve(result);return;}
         if(Build.VERSION.SDK_INT>=29&&!GeofenceController.hasBackgroundPermission(getContext())){Intent i=new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:"+getContext().getPackageName()));getActivity().startActivity(i);}
         else GeofenceController.sync(getContext());
         call.resolve();
     }
     @PluginMethod public void getCurrentLocation(PluginCall call){
-        if(!GeofenceController.hasFinePermission(getContext())){call.reject("Autorize a localização primeiro.");return;}
-        try{LocationServices.getFusedLocationProviderClient(getContext()).getCurrentLocation(com.google.android.gms.location.Priority.PRIORITY_HIGH_ACCURACY,null).addOnSuccessListener(location->{if(location==null)call.reject("Não foi possível obter a localização.");else{JSObject result=new JSObject();result.put("latitude",location.getLatitude());result.put("longitude",location.getLongitude());call.resolve(result);}}).addOnFailureListener(e->call.reject(e.getMessage()));}catch(SecurityException e){call.reject("Localização não autorizada.");}
+        if(!GeofenceController.hasFinePermission(getContext())){call.reject("Allow precise location first.");return;}
+        try{LocationServices.getFusedLocationProviderClient(getContext()).getCurrentLocation(com.google.android.gms.location.Priority.PRIORITY_HIGH_ACCURACY,null).addOnSuccessListener(location->{if(location==null)call.reject("Current location is unavailable.");else{JSObject result=new JSObject();result.put("latitude",location.getLatitude());result.put("longitude",location.getLongitude());call.resolve(result);}}).addOnFailureListener(e->call.reject(e.getMessage()));}catch(SecurityException e){call.reject("Location permission was not granted.");}
     }
 }
