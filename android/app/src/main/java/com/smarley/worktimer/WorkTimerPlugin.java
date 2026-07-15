@@ -1,6 +1,8 @@
 package com.smarley.worktimer;
 
 import android.Manifest;
+import android.app.AlarmManager;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
@@ -27,9 +29,15 @@ public class WorkTimerPlugin extends Plugin {
         if(ContextCompat.checkSelfPermission(getContext(),Manifest.permission.ACCESS_COARSE_LOCATION)!=PackageManager.PERMISSION_GRANTED)needed.add(Manifest.permission.ACCESS_COARSE_LOCATION);
         if(ContextCompat.checkSelfPermission(getContext(),Manifest.permission.ACCESS_FINE_LOCATION)!=PackageManager.PERMISSION_GRANTED)needed.add(Manifest.permission.ACCESS_FINE_LOCATION);
         if(Build.VERSION.SDK_INT>=33&&ContextCompat.checkSelfPermission(getContext(),Manifest.permission.POST_NOTIFICATIONS)!=PackageManager.PERMISSION_GRANTED)needed.add(Manifest.permission.POST_NOTIFICATIONS);
-        if(!needed.isEmpty()){ActivityCompat.requestPermissions(getActivity(),needed.toArray(new String[0]),909);JSObject result=new JSObject();result.put("next","Select precise location. Then tap again to allow location all the time.");call.resolve(result);return;}
+        if(!needed.isEmpty()){ActivityCompat.requestPermissions(getActivity(),needed.toArray(new String[0]),909);JSObject result=new JSObject();result.put("next","Select precise location. Then tap again to allow exact alarms and background location.");call.resolve(result);return;}
+        AlarmManager alarms=getContext().getSystemService(AlarmManager.class);
+        if(Build.VERSION.SDK_INT>=31&&!alarms.canScheduleExactAlarms()){
+            Intent i=new Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM,Uri.parse("package:"+getContext().getPackageName()));
+            getActivity().startActivity(i);
+            JSObject result=new JSObject();result.put("next","Allow alarms and reminders, then return to the app.");call.resolve(result);return;
+        }
         if(Build.VERSION.SDK_INT>=29&&!GeofenceController.hasBackgroundPermission(getContext())){Intent i=new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:"+getContext().getPackageName()));getActivity().startActivity(i);}
-        else GeofenceController.sync(getContext());
+        else {GeofenceController.sync(getContext());new WorkTimerState(getContext()).scheduleGoal();}
         call.resolve();
     }
     @PluginMethod public void getCurrentLocation(PluginCall call){
